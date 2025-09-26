@@ -41,19 +41,19 @@ export default function Navbar() {
           {/* Center Icons */}
           <div className="hidden md:flex items-center space-x-8">
             <IconWithShadow
-              icon="/Graphics/Icons/photo_studio.svg"
+              icon="/Graphics/Icons/Photo Studio.svg"
               hoverIcon="/Graphics/Icons/photo_studio_hover_state.svg"
               label="Studio"
               href="/search?category=studio"
             />
             <IconWithShadow
-              icon="/Graphics/Icons/office_desktop.svg"
+              icon="/Graphics/Icons/Office desktop.svg"
               hoverIcon="/Graphics/Icons/office_desktop_hover_state.svg"
               label="Office"
               href="/search?category=office"
             />
             <IconWithShadow
-              icon="/Graphics/Icons/room.svg"
+              icon="/Graphics/Icons/Room.svg"
               hoverIcon="/Graphics/Icons/room_hover_state.svg"
               label="Event"
               href="/search?category=event"
