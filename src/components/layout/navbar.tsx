@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, Menu, User, LogOut, Settings, Heart, MapPin, Users } from 'lucide-react'
+import { Search, Menu, User, LogOut, Settings, Heart, MapPin, Users, Calendar } from 'lucide-react'
 import { IconWithShadow } from '../ui/IconWithShadow'
+import { DateRangePicker } from '../ui/date-picker'
 import { cn } from '@/lib/utils'
 
 export default function Navbar() {
@@ -13,6 +14,10 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [location, setLocation] = useState('')
   const [guests, setGuests] = useState('1')
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined
+  })
   const router = useRouter()
 
   const handleSearch = (e: React.FormEvent) => {
@@ -21,6 +26,8 @@ export default function Navbar() {
     if (searchQuery) params.set('q', searchQuery)
     if (location) params.set('location', location)
     if (guests) params.set('guests', guests)
+    if (dateRange.from) params.set('checkin', dateRange.from.toISOString().split('T')[0])
+    if (dateRange.to) params.set('checkout', dateRange.to.toISOString().split('T')[0])
     router.push(`/search?${params.toString()}`)
   }
 
@@ -118,8 +125,8 @@ export default function Navbar() {
 
         {/* Row 2 - Search Bar */}
         <div className="flex items-center">
-                 <form onSubmit={handleSearch} className="w-full max-w-3xl mx-auto">
-                   <div className="bg-white rounded-full shadow-lg border border-gray-200 p-2 flex flex-col md:flex-row gap-2 items-center hover:shadow-xl transition-shadow">
+                 <form onSubmit={handleSearch} className="w-full max-w-4xl mx-auto">
+                   <div className="bg-white rounded-full shadow-lg border border-gray-200 p-2 flex flex-col lg:flex-row gap-2 items-center hover:shadow-xl transition-shadow">
                      <div className="flex-1 flex items-center px-4 py-3 rounded-full hover:bg-[#F8DEFF] transition-colors">
                        <Search className="w-4 h-4 text-gray-500 mr-2" />
                        <input 
@@ -138,6 +145,15 @@ export default function Navbar() {
                          className="flex-1 bg-transparent outline-none text-base placeholder:text-gray-500"
                          value={location}
                          onChange={(e) => setLocation(e.target.value)}
+                       />
+                     </div>
+                     <div className="flex-1 flex items-center px-4 py-3 rounded-full hover:bg-[#F8DEFF] transition-colors">
+                       <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                       <DateRangePicker
+                         value={dateRange}
+                         onChange={setDateRange}
+                         placeholder="When?"
+                         className="bg-transparent border-0 shadow-none p-0 h-auto text-base"
                        />
                      </div>
                      <div className="flex items-center px-4 py-3 rounded-full hover:bg-[#F8DEFF] transition-colors">

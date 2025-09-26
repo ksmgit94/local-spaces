@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { MapPin, Star, Heart, Users, Wifi, Car, Coffee, Camera, Shield, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { AvailabilityCalendar } from '@/components/booking/AvailabilityCalendar'
 import MapboxMap from '@/components/map/mapbox-map'
 import Link from 'next/link'
 
@@ -41,11 +42,12 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [selectedDates, setSelectedDates] = useState<{start: Date | null, end: Date | null}>({
-    start: null,
-    end: null
+  const [selectedDates, setSelectedDates] = useState<{from: Date | undefined, to: Date | undefined}>({
+    from: undefined,
+    to: undefined
   })
   const [guests, setGuests] = useState(1)
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
 
   // Mock data - replace with actual API call
   useEffect(() => {
@@ -104,13 +106,33 @@ export default function ListingDetailPage() {
   }
 
   const calculateTotal = () => {
-    if (!listing || !selectedDates.start || !selectedDates.end) return 0
+    if (!listing || !selectedDates.from || !selectedDates.to) return 0
     
-    const nights = Math.ceil((selectedDates.end.getTime() - selectedDates.start.getTime()) / (1000 * 60 * 60 * 24))
+    const nights = Math.ceil((selectedDates.to.getTime() - selectedDates.from.getTime()) / (1000 * 60 * 60 * 24))
     const subtotal = listing.price * nights
     const platformFee = Math.round(subtotal * 0.05)
     const taxes = Math.round(subtotal * 0.25) // 25% VAT
     return subtotal + platformFee + taxes
+  }
+
+  const handleAvailabilityCheck = async (startDate: Date, endDate: Date) => {
+    try {
+      const response = await fetch(
+        `/api/listings/${listingId}/availability?start=${startDate.toISOString().split('T')[0]}&end=${endDate.toISOString().split('T')[0]}`
+      )
+      
+      if (!response.ok) {
+        throw new Error('Failed to check availability')
+      }
+      
+      const data = await response.json()
+      setIsAvailable(data.available)
+      return data.available
+    } catch (error) {
+      console.error('Error checking availability:', error)
+      setIsAvailable(false)
+      return false
+    }
   }
 
   if (loading) {
@@ -312,27 +334,17 @@ export default function ListingDetailPage() {
                 </div>
 
                 <form className="space-y-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-textPrimary mb-1">
-                        Check-in
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full h-10 px-3 border border-border rounded-md text-sm"
-                        onChange={(e) => setSelectedDates(prev => ({...prev, start: new Date(e.target.value)}))}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-textPrimary mb-1">
-                        Check-out
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full h-10 px-3 border border-border rounded-md text-sm"
-                        onChange={(e) => setSelectedDates(prev => ({...prev, end: new Date(e.target.value)}))}
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-textPrimary mb-2">
+                      Select Dates
+                    </label>
+                    <AvailabilityCalendar
+                      listingId={listingId}
+                      value={selectedDates}
+                      onChange={setSelectedDates}
+                      onAvailabilityCheck={handleAvailabilityCheck}
+                      className="border-0 shadow-none"
+                    />
                   </div>
 
                   <div>
@@ -350,11 +362,16 @@ export default function ListingDetailPage() {
                     </select>
                   </div>
 
-                  <Button className="w-full" size="lg">
-                    {listing.instantBook ? 'Reserve' : 'Request to Book'}
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    disabled={!selectedDates.from || !selectedDates.to || isAvailable === false}
+                  >
+                    {isAvailable === false ? 'Not Available' : 
+                     listing.instantBook ? 'Reserve' : 'Request to Book'}
                   </Button>
 
-                  {selectedDates.start && selectedDates.end && (
+                  {selectedDates.from && selectedDates.to && (
                     <div className="pt-4 border-t border-border">
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">

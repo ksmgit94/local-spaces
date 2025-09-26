@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, MapPin, Filter, Star, Heart, Users } from 'lucide-react'
 import MapboxMap from '@/components/map/mapbox-map'
+import { ListingGrid } from '@/components/listing/ListingGrid'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,8 @@ function SearchContent() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [location, setLocation] = useState(searchParams.get('location') || '')
   const [guests, setGuests] = useState(searchParams.get('guests') || '1')
+  const [checkin, setCheckin] = useState(searchParams.get('checkin') || '')
+  const [checkout, setCheckout] = useState(searchParams.get('checkout') || '')
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [listings, setListings] = useState<Listing[]>([])
@@ -36,93 +39,68 @@ function SearchContent() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.5683, 55.6761])
   const [mapZoom, setMapZoom] = useState(12)
 
-  // Mock data - replace with actual API call
+  // Fetch real data from API
   useEffect(() => {
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const mockListings: Listing[] = [
-        {
-          id: '1',
-          title: 'Modern Conference Room in Downtown',
-          description: 'Perfect for business meetings with modern amenities',
-          price: 45,
-          rating: 4.9,
-          reviews: 127,
-          location: 'Copenhagen, Denmark',
-          coordinates: [12.5683, 55.6761],
-          image: '/api/placeholder/400/300',
-          instantBook: true,
-          capacity: 12,
-          amenities: ['WiFi', 'Projector', 'Whiteboard', 'Coffee']
-        },
-        {
-          id: '2',
-          title: 'Creative Photography Studio',
-          description: 'Professional studio with natural light and equipment',
-          price: 65,
-          rating: 4.8,
-          reviews: 89,
-          location: 'Aarhus, Denmark',
-          coordinates: [10.2039, 56.1572],
-          image: '/api/placeholder/400/300',
-          instantBook: false,
-          capacity: 8,
-          amenities: ['WiFi', 'Photography Equipment', 'Changing Room', 'Parking']
-        },
-        {
-          id: '3',
-          title: 'Elegant Event Venue with Garden',
-          description: 'Beautiful venue perfect for weddings and celebrations',
-          price: 150,
-          rating: 4.9,
-          reviews: 203,
-          location: 'Odense, Denmark',
-          coordinates: [10.4024, 55.4038],
-          image: '/api/placeholder/400/300',
-          instantBook: true,
-          capacity: 50,
-          amenities: ['WiFi', 'Sound System', 'Garden', 'Parking', 'Kitchen']
-        },
-        {
-          id: '4',
-          title: 'Co-working Space - Private Office',
-          description: 'Quiet private office in modern co-working space',
-          price: 35,
-          rating: 4.7,
-          reviews: 156,
-          location: 'Aalborg, Denmark',
-          coordinates: [9.9217, 57.0488],
-          image: '/api/placeholder/400/300',
-          instantBook: true,
-          capacity: 4,
-          amenities: ['WiFi', 'Printer', 'Coffee', 'Reception']
-        },
-        {
-          id: '5',
-          title: 'Art Gallery Event Space',
-          description: 'Unique gallery space for exhibitions and events',
-          price: 85,
-          rating: 4.6,
-          reviews: 94,
-          location: 'Copenhagen, Denmark',
-          coordinates: [12.5719, 55.6759],
-          image: '/api/placeholder/400/300',
-          instantBook: false,
-          capacity: 30,
-          amenities: ['WiFi', 'Lighting', 'Security', 'Parking']
+    const fetchListings = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        if (searchQuery) params.set('text', searchQuery)
+        if (location) params.set('location', location)
+        if (guests) params.set('capacity', guests)
+        if (checkin) params.set('checkin', checkin)
+        if (checkout) params.set('checkout', checkout)
+        
+        const response = await fetch(`/api/listings?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch listings')
         }
-      ]
-      setListings(mockListings)
-      setLoading(false)
-    }, 1000)
-  }, [searchQuery, location, guests])
+        
+        const data = await response.json()
+        
+        // Transform API data to match our interface
+        const transformedListings: Listing[] = data.listings?.map((listing: any) => ({
+          id: listing.id,
+          title: listing.title,
+          description: listing.description || '',
+          price: listing.price_amount,
+          rating: listing.rating_avg || 0,
+          reviews: listing.rating_count || 0,
+          location: `${listing.city}, ${listing.country}`,
+          coordinates: listing.geo ? [listing.geo.coordinates[0], listing.geo.coordinates[1]] : [0, 0],
+          image: listing.listing_photos?.[0]?.url || '/api/placeholder/400/300',
+          instantBook: listing.instant_book,
+          capacity: listing.capacity,
+          amenities: listing.amenities || []
+        })) || []
+        
+        setListings(transformedListings)
+      } catch (error) {
+        console.error('Error fetching listings:', error)
+        // Fallback to empty array on error
+        setListings([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchListings()
+  }, [searchQuery, location, guests, checkin, checkout])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Trigger new search
-    setLoading(true)
-    // In a real app, this would update the URL and trigger a new API call
+    // Update URL with search parameters
+    const params = new URLSearchParams()
+    if (searchQuery) params.set('q', searchQuery)
+    if (location) params.set('location', location)
+    if (guests) params.set('guests', guests)
+    if (checkin) params.set('checkin', checkin)
+    if (checkout) params.set('checkout', checkout)
+    
+    // Update URL without page reload
+    window.history.pushState({}, '', `/search?${params.toString()}`)
+    
+    // The useEffect will automatically trigger a new search
   }
 
   const handleListingClick = (listingId: string) => {
@@ -301,49 +279,15 @@ function SearchContent() {
             <div className="text-[#6F6470]">Loading spaces...</div>
           </div>
         ) : viewMode === 'list' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-16">
-            {listings.map((listing) => (
-              <Link key={listing.id} href={`/spaces/${listing.id}`}>
-                <div id={`listing-${listing.id}`} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
-                  <div className="relative">
-                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                      <span className="text-gray-500">Image placeholder</span>
-                    </div>
-                    <button className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-shadow">
-                      <Heart className="w-4 h-4 text-gray-500" />
-                    </button>
-                    {listing.instantBook && (
-                      <div className="absolute top-3 left-3 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        Instant Book
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-[#484149] line-clamp-2">
-                        {listing.title}
-                      </h3>
-                      <div className="flex items-center ml-2">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-[#6F6470] ml-1">{listing.rating}</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-[#6F6470] text-sm mb-2">{listing.location}</p>
-                    <p className="text-[#6F6470] text-sm mb-3 line-clamp-2">{listing.description}</p>
-                    
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-lg font-semibold text-[#484149]">€{listing.price}</span>
-                        <span className="text-[#6F6470] text-sm">/day</span>
-                      </div>
-                      <span className="text-[#6F6470] text-sm">({listing.reviews} reviews)</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="pb-16">
+            <ListingGrid 
+              listings={listings} 
+              loading={loading}
+              onFavorite={(listingId) => {
+                // TODO: Implement favorite functionality
+                console.log('Favorite clicked:', listingId)
+              }}
+            />
           </div>
         ) : (
           <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200">

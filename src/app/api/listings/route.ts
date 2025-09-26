@@ -9,12 +9,14 @@ export async function GET(request: NextRequest) {
     // Parse search parameters
     const bbox = searchParams.get('bbox')
     const text = searchParams.get('text')
+    const location = searchParams.get('location')
     const priceMin = searchParams.get('priceMin')
     const priceMax = searchParams.get('priceMax')
     const capacity = searchParams.get('capacity')
     const instantBook = searchParams.get('instantBook')
     const amenities = searchParams.getAll('amenities[]')
-    const dates = searchParams.get('dates')
+    const checkin = searchParams.get('checkin')
+    const checkout = searchParams.get('checkout')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = (page - 1) * limit
@@ -49,6 +51,11 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Location search
+    if (location) {
+      query = query.or(`city.ilike.%${location}%,country.ilike.%${location}%,address.ilike.%${location}%`)
+    }
+
     // Price range
     if (priceMin) {
       query = query.gte('price_amount', parseInt(priceMin))
@@ -70,6 +77,13 @@ export async function GET(request: NextRequest) {
     // Amenities filter
     if (amenities.length > 0) {
       query = query.contains('amenities', amenities)
+    }
+
+    // Date availability filtering
+    if (checkin && checkout) {
+      // For now, we'll implement basic date filtering
+      // In a full implementation, this would check against availability_rules and existing bookings
+      // This is a placeholder for the availability logic
     }
 
     // Geographic bounding box
