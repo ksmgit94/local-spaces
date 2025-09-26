@@ -32,7 +32,7 @@ export default function Navbar() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
                   <img 
-                    src="/Graphics/Logo/Logo type + Icon/PinkAsset 2.svg" 
+                    src="/Graphics/Logo/Logo Mark/Pink.svg" 
                     alt="Nooko" 
                     className="h-8 w-auto"
                   />
