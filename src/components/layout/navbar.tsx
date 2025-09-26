@@ -53,7 +53,7 @@ export default function Navbar() {
               href="/search?category=office"
             />
             <IconWithShadow
-              icon="/Graphics/Icons/Room.svg"
+              icon="/Graphics/Icons/room.svg"
               hoverIcon="/Graphics/Icons/room_hover_state.svg"
               label="Event"
               href="/search?category=event"
