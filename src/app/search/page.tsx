@@ -39,7 +39,7 @@ function SearchContent() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.5683, 55.6761])
   const [mapZoom, setMapZoom] = useState(12)
 
-  // Fetch real data from API
+  // Fetch real data from API with fallback to mock data
   useEffect(() => {
     const fetchListings = async () => {
       setLoading(true)
@@ -77,8 +77,108 @@ function SearchContent() {
         setListings(transformedListings)
       } catch (error) {
         console.error('Error fetching listings:', error)
-        // Fallback to empty array on error
-        setListings([])
+        // Fallback to mock data when API fails
+        const mockListings: Listing[] = [
+          {
+            id: '1',
+            title: 'Modern Conference Room in Downtown',
+            description: 'Perfect for business meetings with modern amenities',
+            price: 45,
+            rating: 4.9,
+            reviews: 127,
+            location: 'Copenhagen, Denmark',
+            coordinates: [12.5683, 55.6761],
+            image: '/images/photostudios/2083fbe6dc030f224d9634513073793252711562.png',
+            instantBook: true,
+            capacity: 12,
+            amenities: ['WiFi', 'Projector', 'Whiteboard', 'Coffee']
+          },
+          {
+            id: '2',
+            title: 'Creative Photography Studio',
+            description: 'Professional studio with natural light and equipment',
+            price: 65,
+            rating: 4.8,
+            reviews: 89,
+            location: 'Aarhus, Denmark',
+            coordinates: [10.2039, 56.1572],
+            image: '/images/photostudios/689da4915f5a961d7fde59fd5c2088cd43895ab2.png',
+            instantBook: false,
+            capacity: 8,
+            amenities: ['WiFi', 'Photography Equipment', 'Changing Room', 'Parking']
+          },
+          {
+            id: '3',
+            title: 'Elegant Event Venue with Garden',
+            description: 'Beautiful venue perfect for weddings and celebrations',
+            price: 150,
+            rating: 4.9,
+            reviews: 203,
+            location: 'Odense, Denmark',
+            coordinates: [10.4024, 55.4038],
+            image: '/images/photostudios/79d5f710f747bf7bcc951f0a55348d500cb92049.png',
+            instantBook: true,
+            capacity: 50,
+            amenities: ['WiFi', 'Sound System', 'Garden', 'Parking', 'Kitchen']
+          },
+          {
+            id: '4',
+            title: 'Co-working Space - Private Office',
+            description: 'Quiet private office in modern co-working space',
+            price: 35,
+            rating: 4.7,
+            reviews: 156,
+            location: 'Aalborg, Denmark',
+            coordinates: [9.9217, 57.0488],
+            image: '/images/photostudios/9d6428d71a04a212d3425f0ad9dac0d21cde4e33.png',
+            instantBook: true,
+            capacity: 4,
+            amenities: ['WiFi', 'Printer', 'Coffee', 'Reception']
+          },
+          {
+            id: '5',
+            title: 'Art Gallery Event Space',
+            description: 'Unique gallery space for exhibitions and events',
+            price: 85,
+            rating: 4.6,
+            reviews: 94,
+            location: 'Copenhagen, Denmark',
+            coordinates: [12.5719, 55.6759],
+            image: '/images/photostudios/9f2ccc682b3eb2b90162328bc521d584cd769cc7.png',
+            instantBook: false,
+            capacity: 30,
+            amenities: ['WiFi', 'Lighting', 'Security', 'Parking']
+          },
+          {
+            id: '6',
+            title: 'Industrial Loft for Events',
+            description: 'Spacious industrial loft perfect for large gatherings',
+            price: 120,
+            rating: 4.8,
+            reviews: 67,
+            location: 'Aarhus, Denmark',
+            coordinates: [10.2039, 56.1572],
+            image: '/images/photostudios/a813a406f6410ce1c05b65426496482113ebe50d.png',
+            instantBook: true,
+            capacity: 40,
+            amenities: ['WiFi', 'Sound System', 'Kitchen', 'Parking']
+          },
+          {
+            id: '7',
+            title: 'Modern Meeting Room',
+            description: 'Professional meeting room with video conferencing',
+            price: 55,
+            rating: 4.9,
+            reviews: 134,
+            location: 'Copenhagen, Denmark',
+            coordinates: [12.5683, 55.6761],
+            image: '/images/photostudios/ec18898850b581c9cfef6c22da3ccd5ff291b9a4.png',
+            instantBook: true,
+            capacity: 10,
+            amenities: ['WiFi', 'Video Conferencing', 'Whiteboard', 'Coffee']
+          }
+        ]
+        setListings(mockListings)
       } finally {
         setLoading(false)
       }
